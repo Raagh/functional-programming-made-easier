@@ -2,8 +2,9 @@ module Main where
 
 import Prelude
 
+import Data.Array (filter)
 import Data.Date (Date)
-import Data.Tuple (Tuple)
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Console (log)
 
@@ -280,15 +281,133 @@ isCEO { jobTitle } = jobTitle == "CEO"
 isEmployeeFromCalifornia :: Employee -> Boolean
 isEmployeeFromCalifornia { address: { state } } = state == "CA"
 
-
 -- matches against all types that have an address field of type address
 -- independent of what other fields they might have
 -- weird syntax? why do you need to know that it has other fields? why does it matter?
 isFromCalifornia :: forall r. { address :: Address | r } -> Boolean
-isFromCalifornia { address: { state } } = state == "CA"
+-- isFromCalifornia { address: { state } } = state == "CA"
+-- this on top of pattern matching it renames state tp s for simplicity
+isFromCalifornia { address: { state: s }} = s == "CA"
+
+-- Pattern match against the value expected
+isCalifornia :: forall r. { address :: Address | r } -> Boolean
+isCalifornia { address: { state: "CA" } } = true
+isCalifornia _                            = false
+ 
+keepPositive :: Int -> Int
+keepPositive x = if x < 0 then 0 else x
+
+data ContactMethod 
+  = Phone
+  | Email
+  | Fax
+
+keepModernCase :: ContactMethod -> ContactMethod
+keepModernCase preferredContactMethod =
+  case preferredContactMethod of
+      Phone -> Phone
+      Email -> Email
+      Fax   -> Email
+
+keepModern :: ContactMethod -> ContactMethod
+keepModern Phone = Phone
+keepModern Email = Email
+keepModern Fax   = Email
+
+keepPositiveGuards :: Int -> Int
+keepPositiveGuards x
+  | x < 0     = 0
+  | otherwise = x
+
+keepModernIfYoung :: Int -> ContactMethod -> ContactMethod
+keepModernIfYoung age preferredContactMethod =
+  case preferredContactMethod of
+      Phone -> Phone
+      Email -> Email
+      Fax | age < 40  -> Email
+          | otherwise -> Fax
+
+noBiggerThan10 :: Maybe Int -> Int
+noBiggerThan10 x = case x of
+  Just x | x > 10    -> 10
+         | otherwise -> x
+  Nothing            -> 0
+
+takeWhile :: forall a. (a -> Boolean) -> List a -> List a
+takeWhile p (x : xs) | p x = x : takeWhile p xs
+takeWhile _ _ = Nil
+
+-- It doesn't compile, I think it can't match type
+-- List Int to List a from predicate filter function
+
+-- filter10 :: List Int -> List Int
+-- filter10 l = filter (\x -> x < 10) l 
+
+sum2 :: Int -> Int -> Int
+sum2 x y = x + y
+-- sum2 x = \y -> x + y
+-- sum2 = \x -> \y -> x + y
+
+compose :: forall a b c. (b -> c) -> (a -> b) -> (a -> c)
+compose f g x = f (g x)
+
+f1 x y z =                   x + y + z
+f2 x y   = \z ->             x + y + z
+f3 x     = \y -> \z ->       x + y + z
+f4       = \x -> \y -> \z -> x + y + z
+
+filter10 :: Array Int
+filter10 = filter (_ < 10) [1,2,3,4,5,6,30,50]
+
+-- name = \name age -> {name: name, age: age}
+name = { name: _, age:_ }
+
+newNewPerson = \name age -> person { name = name, age = age }
+
+newerPerson = person { name = _, age =_}
+
+
+----------------------------------------------------------------------------------------
+-- 3.6 Bindings
+
+multSum :: Int -> Int -> Tuple Int Int
+multSum x y = Tuple mult sum
+  where 
+    mult = x * y
+    sum  = x + y
+
+multSum' :: Int -> Int -> Tuple Int Int
+multSum' x y =
+   let mult = x * y
+       sum  = x + y in
+   Tuple mult sum
+
+filterWithLet :: Array Int
+filterWithLet = filter (\n -> let n2 = n * n in n == n2) [0, 1, 2] 
+
+append' :: forall a. List a -> List a -> List a
+append' xs Nil = xs
+append' Nil ys = ys
+append' (Cons x xs) ys = Cons x (append' xs ys)
+
+infixr 5 append as <>
+
+-- ((2 + 3) + 4)  left associative 
+-- (l1 <> (l2 <> l3)) right associative
+
+-- All the same
+-- l1 <> l2
+-- (<>) l1 l2
+-- append l1 l2
+-- l1 `append` l2
+
+{-
+  Multiline comments
+  bitch!
+-}
 
 main :: Effect Unit
 main = do
-  -- log $ fullName (LastName "Ferraggi") (MiddleName "") (FirstName "Patricio") -- This throws error because fullName has parameters in the wrong order
+  -- log $ fullName (LastName "Ferrl1aggi") (MiddleName "") (FirstName "Patricio") -- This throws error because fullName has parameters in the wrong order
   log $ fullName (FirstName "Patricio") (MiddleName "") (LastName "Ferraggi")
   -- log $ show $ isFromCalifornia { name : "", jobTitle: "", yearsAtCompany: 0, address: { street: "", city: "", zip: "",  state : "CA" } }
