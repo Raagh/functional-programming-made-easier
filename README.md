@@ -4,4 +4,7 @@ Exercises and practice from the book functional programming made easier using Pu
 
 - [X] Chapter 1
 - [X] Chapter 2
-- [ ] Chapter 3 
+- [X] Chapter 3 
+- [X] Chapter 4 
+- [] Chapter 5 
+
